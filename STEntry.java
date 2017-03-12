@@ -1,74 +1,30 @@
-/*  
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package minijavacompiler;
 
-import java.util.Iterator;
-import java.util.TreeMap;
-
 /**
- *
- * @author Victoria Moraes
+ * @author facom
  */
-public class SymbolTable<T extends STEntry> implements Iterable<T>
+public class STEntry 
 {
-    SymbolTable<T> parent;
-    TreeMap<String, T> symbols;
-
-    SymbolTable()
+    public Token token;
+    public String lexeme;
+    public boolean reserved;
+    
+    public STEntry()
+    {}
+    
+    public STEntry(Token tok, String lex)
     {
-        symbols = new TreeMap<String, T>();
+        token = tok;
+        lexeme = lex;
+        reserved = false;
+        
+        //double var = 2.e+24;
     }
     
-    SymbolTable(SymbolTable<T> p)
+    public STEntry(Token tok, String lex, boolean res)
     {
-        symbols = new TreeMap<String, T>();
-        
-        parent = p;
+        token = tok;
+        lexeme = lex;
+        reserved = res;
     }
-
-    public boolean add(T t)
-    {
-        //System.out.print(t.lexeme);
-        
-        if (symbols.containsKey(t.lexeme))
-                return false;
-        symbols.put(t.lexeme, t);
-        return true;
-    }
-
-    public boolean remove(String name)
-    {
-        return symbols.remove(name) != null;
-    }
-
-    public void clear()
-    {
-        symbols.clear();
-    }
-
-    public boolean isEmpty()
-    {
-        return symbols.isEmpty();
-    }
-
-    public T get(String name)
-    {
-        T s;
-        SymbolTable<T> table = this;
-
-        do
-        {
-            s = table.symbols.get(name);
-        } while (s == null && (table = table.parent) != null);
-        
-        return s;
-    }
-
-    public Iterator<T> iterator()
-    {
-        return symbols.values().iterator();
-    } 
 }
-    
