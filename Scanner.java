@@ -8,7 +8,7 @@ import java.text.StringCharacterIterator;
 
 /**
  *
- * @author Victoria Moraes e Lucas Reis
+ * @author Victoria Moraes
  */
 public class Scanner
 {
