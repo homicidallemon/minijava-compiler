@@ -7,7 +7,7 @@ package mjcompiler;
 
 /**
  *
- * @author Victoria Moraes e Lucas Reis
+ * @author Victoria Moraes
  */
 public class Parser
 {
