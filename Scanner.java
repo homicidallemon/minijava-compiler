@@ -36,7 +36,7 @@ public class Scanner
             inputIt = new StringCharacterIterator(input);
 
             lineNumber = 1;
-        }
+        } 
         catch(FileNotFoundException e)
         {
             System.err.println("Arquivo não encontrado");
