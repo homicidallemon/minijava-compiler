@@ -83,7 +83,18 @@ public class Parser
     private void mainClass() throws CompilerException
     {
         match(EnumToken.CLASS);
-        match(EnumToken.ID);
+        //match(EnumToken.ID);
+	
+	if(lToken.name == EnumToken.ID)
+	{
+		boolean inserted = globalST.add(new STEntry (lToken, lToken.value));
+		
+		if(!inserted)
+			System.out.printf("Classe %s já definida\n", lToken.value);
+		advance();
+	}
+	else throw new CompilerException("Identificador esperado");
+	    
         match(EnumToken.LBRACE);
         match(EnumToken.PUBLIC);
         match(EnumToken.STATIC);
@@ -103,33 +114,87 @@ public class Parser
 
     private void classDeclaration() throws CompilerException
     {
-        match(EnumToken.CLASS);
-        match(EnumToken.ID);
+        //match(EnumToken.CLASS);
+	advance();
+        //match(EnumToken.ID);
+	    
+	if(lToken.name == EnumToken.ID)
+	{
+		boolean inserted = globalST.add(new STEntry (lToken, lToken.value));
+		
+		if(!inserted)
+			System.out.printf("Classe %s já definida\n", lToken.value);
+		advance();
+	}
+	else throw new CompilerException("Identificador esperado");
+	    
         if(lToken.name == EnumToken.EXTENDS)
         {
-            match(EnumToken.EXTENDS);
-            match(EnumToken.ID);
+            //match(EnumToken.EXTENDS);
+	    advance();
+            //match(EnumToken.ID);
+	    if(lToken.name == EnumToken.ID)
+		{
+			boolean inserted = globalST.add(new STEntry (lToken, lToken.value));
+
+			if(!inserted)
+				System.out.printf("Classe %s já definida\n", lToken.value);
+			advance();
+		}
+		else throw new CompilerException("Identificador esperado");
         }
         match(EnumToken.LBRACE);
+	    
+	currentST = new SymbolTable<STEntry>(currentST);
+	    
+	    
         while(lToken.name == EnumToken.ID || lToken.name == ENUMToken.BOOLEAN
             || lToken.name == EnumToken.INT)
             varDeclaration();
         while(lToken.name == EnumToken.PUBLIC)
             methodDeclaration();
+	    
+	match(EnumToken.RBRACE);
     }
 
     private void varDeclaration() throws CompilerException
     {
-        type();
-        match(EnumToken.ID);
+        type();	/////VER SE TYPE EH ID
+        //match(EnumToken.ID);
+	if(lToken.name == EnumToken.ID)
+	{
+		boolean inserted = globalST.add(new STEntry (lToken, lToken.value));
+
+		if(!inserted)
+			System.out.printf("Classe %s já definida\n", lToken.value);
+		advance();
+	}
+	else throw new CompilerException("Identificador esperado");
+	    
+	    
         match(EnumToken.SEMICOLON);
     }
 
     private void methodDeclaration() throws CompilerException
     {
         match(EnumToken.PUBLIC);
-        type();
-        match(EnumToken.ID);
+        type(); ////////////VERRIFICAR
+	    
+	if(lToken.name == EnumToken.ID)
+		//buscar a partir da tabela de simbolos corrente se o ID foi declarado como classe
+	advance();
+	    
+        //match(EnumToken.ID);
+	if(lToken.name == EnumToken.ID)
+	{
+		boolean inserted = globalST.add(new STEntry (lToken, lToken.value));
+
+		if(!inserted)
+			System.out.printf("Classe %s já definida\n", lToken.value);
+		advance();
+	}
+	else throw new CompilerException("Identificador esperado");
+	    
         match(EnumToken.LPARENTHESE);
         if(lToken.name == EnumToken.ID || lToken.name == ENUMToken.BOOLEAN
             || lToken.name == EnumToken.INT)
@@ -158,7 +223,11 @@ public class Parser
         expression();
         match(EnumToken.SEMICOLON);
         match(EnumToken.RBRACE);
+	    
+	currentST = currentST.parent;
     }
+	
+	//throw new CompilerException("Missing type");
 
     private void type() throws CompilerException
     {
