@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -24,6 +23,7 @@ public class JanelaPrincipal extends javax.swing.JFrame {
     /**
      * Creates new form NewJFrame
      */
+    private File arq = new File("");
     
     public JanelaPrincipal() {
         initComponents();
@@ -68,6 +68,11 @@ public class JanelaPrincipal extends javax.swing.JFrame {
         jScrollPane2.setViewportView(TextoCompilador);
 
         BtnCompilar.setText("Compilar");
+        BtnCompilar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BtnCompilarActionPerformed(evt);
+            }
+        });
 
         MenuFile.setText("File");
         MenuFile.addActionListener(new java.awt.event.ActionListener() {
@@ -164,9 +169,9 @@ public class JanelaPrincipal extends javax.swing.JFrame {
         FileFilter filtro = new FileNameExtensionFilter("Arquivos MiniJava (*.mj)","mj");
         openFile.setFileFilter(filtro);
         if(openFile.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
-            File file = openFile.getSelectedFile();
+            arq = openFile.getSelectedFile();
             try{
-                Texto.read(new FileReader (file.getAbsolutePath()),null);
+                Texto.read(new FileReader (arq.getAbsolutePath()),null);
             }catch(IOException ex){
                 JOptionPane.showMessageDialog(null, "Ocorreu um problema "
                         + "tentando acessar este arquivo");
@@ -184,6 +189,7 @@ public class JanelaPrincipal extends javax.swing.JFrame {
             if (!str.endsWith(".mj")) {
                 str += ".mj";
             }
+            arq = new File(str);
             try (FileWriter file = new FileWriter(str)) {
                 file.write(Texto.getText());
             } catch (IOException ex) {
@@ -195,6 +201,11 @@ public class JanelaPrincipal extends javax.swing.JFrame {
     private void SairActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SairActionPerformed
         System.exit(0);
     }//GEN-LAST:event_SairActionPerformed
+
+    private void BtnCompilarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCompilarActionPerformed
+        SymbolTable GlobalST;
+        
+    }//GEN-LAST:event_BtnCompilarActionPerformed
 
     /**
      * @param args the command line arguments
