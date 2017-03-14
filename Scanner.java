@@ -284,8 +284,11 @@ public class Scanner
                 else SyntaticError();
             }
 
+	
+	    begin = inputIt.getIndex();
+	    end = begin;
             //ID
-            else if(Character.isLetter(inputIt.current()))
+            if(Character.isLetter(inputIt.current()))
             {
                 while(Character.isLetterOrDigit(inputIt.current()) || inputIt.current() == '_')
                 {
@@ -293,6 +296,8 @@ public class Scanner
                 }
                 end = inputIt.getIndex();
                 lexema = new String(input.substring(begin, end));
+		    
+		    //println??
 
     	        //palavras reservadas
                 STEntry entry = st.get(lexema);
