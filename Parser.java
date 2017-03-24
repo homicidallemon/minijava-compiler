@@ -15,6 +15,7 @@ public class Parser
     private SymbolTable globalST;
     private SymbolTable currentST;
     private Token lToken;
+    public String mensagem = new String();
 
     public Parser(String inputFile)
     {
@@ -42,7 +43,7 @@ public class Parser
         }
         catch(CompilerException e)
         {
-            System.err.println(e);
+            mensagem += e.msg;
         }
     }
 
@@ -50,16 +51,16 @@ public class Parser
     {
         lToken = scan.nextToken();
 
-        System.out.print(lToken.name + "(" + lToken.lineNumber + ")" + " " );
+        mensagem += (lToken.name + "(" + lToken.lineNumber + ")" + "\n" );
     }
 
     private void match(EnumToken cTokenName) throws CompilerException
     {
-        if (lToken.name == cTokenName)
+        if (lToken.attribute == cTokenName || lToken.name == cTokenName)
             advance();
         else
         {   //Erro
-            throw new CompilerException("Token inesperado: " + lToken.name);
+            throw new CompilerException("Token inesperado: " + lToken.attribute + "//" + cTokenName);
         }
     }
 
@@ -70,13 +71,12 @@ public class Parser
     private void program() throws CompilerException
     {
         mainClass();
-
         while (lToken.name == EnumToken.CLASS)
             classDeclaration();
 
         match(EnumToken.EOF);
 
-        System.out.println("\nCompilação encerrada com sucesso");
+        mensagem +=("\nCompilação encerrada com sucesso");
 
     }
 
@@ -111,7 +111,7 @@ public class Parser
             match(EnumToken.ID);
         }
         match(EnumToken.LBRACE);
-        while(lToken.name == EnumToken.ID || lToken.name == ENUMToken.BOOLEAN
+        while(lToken.name == EnumToken.ID || lToken.name == EnumToken.BOOLEAN
             || lToken.name == EnumToken.INT)
             varDeclaration();
         while(lToken.name == EnumToken.PUBLIC)
@@ -131,7 +131,7 @@ public class Parser
         type();
         match(EnumToken.ID);
         match(EnumToken.LPARENTHESE);
-        if(lToken.name == EnumToken.ID || lToken.name == ENUMToken.BOOLEAN
+        if(lToken.name == EnumToken.ID || lToken.name == EnumToken.BOOLEAN
             || lToken.name == EnumToken.INT)
         {
             type();
@@ -145,7 +145,7 @@ public class Parser
         }
         match(EnumToken.RPARENTHESE);
         match(EnumToken.LBRACE);
-        while (lToken.name == EnumToken.ID || lToken.name == ENUMToken.BOOLEAN
+        while (lToken.name == EnumToken.ID || lToken.name == EnumToken.BOOLEAN
             || lToken.name == EnumToken.INT)
             varDeclaration();
 

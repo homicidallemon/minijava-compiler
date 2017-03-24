@@ -11,7 +11,7 @@ package mjcompiler;
  */
 public class CompilerException extends RuntimeException
 {
-    private String msg;
+    public String msg;
 
     public CompilerException() 
     {       
@@ -21,7 +21,7 @@ public class CompilerException extends RuntimeException
     public CompilerException(String str)
     {
         super(str);
-        msg = str;
+        msg = "Erro: " + str;
     }
     
     public String toString()

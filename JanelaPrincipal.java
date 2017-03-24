@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -24,6 +23,7 @@ public class JanelaPrincipal extends javax.swing.JFrame {
     /**
      * Creates new form NewJFrame
      */
+    private File arq = new File("");
     
     public JanelaPrincipal() {
         initComponents();
@@ -59,6 +59,11 @@ public class JanelaPrincipal extends javax.swing.JFrame {
         Texto.setColumns(20);
         Texto.setLineWrap(true);
         Texto.setRows(5);
+        Texto.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                TextoMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(Texto);
 
         TextoCompilador.setEditable(false);
@@ -68,6 +73,11 @@ public class JanelaPrincipal extends javax.swing.JFrame {
         jScrollPane2.setViewportView(TextoCompilador);
 
         BtnCompilar.setText("Compilar");
+        BtnCompilar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BtnCompilarActionPerformed(evt);
+            }
+        });
 
         MenuFile.setText("File");
         MenuFile.addActionListener(new java.awt.event.ActionListener() {
@@ -164,9 +174,9 @@ public class JanelaPrincipal extends javax.swing.JFrame {
         FileFilter filtro = new FileNameExtensionFilter("Arquivos MiniJava (*.mj)","mj");
         openFile.setFileFilter(filtro);
         if(openFile.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
-            File file = openFile.getSelectedFile();
+            arq = openFile.getSelectedFile();
             try{
-                Texto.read(new FileReader (file.getAbsolutePath()),null);
+                Texto.read(new FileReader (arq.getAbsolutePath()),null);
             }catch(IOException ex){
                 JOptionPane.showMessageDialog(null, "Ocorreu um problema "
                         + "tentando acessar este arquivo");
@@ -176,6 +186,35 @@ public class JanelaPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_AbrirActionPerformed
 
     private void SalvarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SalvarActionPerformed
+        Salvar();
+    }//GEN-LAST:event_SalvarActionPerformed
+
+    private void SairActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SairActionPerformed
+        System.exit(0);
+    }//GEN-LAST:event_SairActionPerformed
+
+    private void BtnCompilarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCompilarActionPerformed
+        TextoCompilador.setText("");
+        if(Texto.getText() != "" && arq.isFile() == true){
+            if(Texto.isEditable()){
+                Salvar();
+                Texto.setEditable(false);
+            }
+            Parser pars = new Parser(arq.getPath());
+            pars.execute();
+            TextoCompilador.setText(pars.mensagem);
+        }else{
+            JOptionPane.showMessageDialog(null,"Crie ou abra um arquivo primeiro!");
+        }
+    }//GEN-LAST:event_BtnCompilarActionPerformed
+
+    private void TextoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TextoMouseClicked
+        Texto.setEditable(true);
+    }//GEN-LAST:event_TextoMouseClicked
+
+    
+    private void Salvar()
+    {
         JFileChooser saveFile = new JFileChooser();
         FileFilter filtro = new FileNameExtensionFilter("Arquivos MiniJava (*.mj)","mj");
         saveFile.setFileFilter(filtro);
@@ -184,18 +223,14 @@ public class JanelaPrincipal extends javax.swing.JFrame {
             if (!str.endsWith(".mj")) {
                 str += ".mj";
             }
+            arq = new File(str);
             try (FileWriter file = new FileWriter(str)) {
                 file.write(Texto.getText());
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, "Arquivo inválido!");
+                JOptionPane.showMessageDialog(null,"Arquivo inválido!");
             }
         }
-    }//GEN-LAST:event_SalvarActionPerformed
-
-    private void SairActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SairActionPerformed
-        System.exit(0);
-    }//GEN-LAST:event_SairActionPerformed
-
+    }
     /**
      * @param args the command line arguments
      */
