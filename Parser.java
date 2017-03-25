@@ -56,7 +56,7 @@ public class Parser
 
     private void match(EnumToken cTokenName) throws CompilerException
     {
-        if (lToken.attribute == cTokenName || lToken.name == cTokenName)
+        if (lToken.name == cTokenName)
             advance();
         else
         {   //Erro
@@ -238,22 +238,40 @@ public class Parser
     private void expression() throws CompilerException
     {
         if(lToken.name == EnumToken.INTEGER_LITERAL)
-            match(EnumToken.INTEGER_LITERAL);
+            advance();
         else if(lToken.name == EnumToken.TRUE)
-            match(EnumToken.TRUE);
+            advance(); 
         else if(lToken.name == EnumToken.FALSE)
-            match(EnumToken.FALSE);
+            advance();
         else if(lToken.name == EnumToken.ID)
-            match(EnumToken.ID);
+            advance();
         else if(lToken.name == EnumToken.THIS)
-            match(EnumToken.THIS);
+            advance();
         else if(lToken.name == EnumToken.NEW)
-            match(EnumToken.NEW);
+        {
+            advance();
+            if(lToken.name == EnumToken.INT)
+            {
+                advance();
+                match(EnumToken.LBRACKET);
+                expression();
+                match(EnumToken.RBRACKET);
+            }
+            else if(lToken.name == EnumToken.ID)
+            {
+                advance();
+                match(EnumToken.LPARENTHESE);
+                match(EnumToken.RPARENTHESE);
+            }
+        }
         else if(lToken.name == EnumToken.NOT)
-            match(EnumToken.NOT);
+            advance();
         else if(lToken.name == EnumToken.LPARENTHESE)
-            match(EnumToken.LPARENTHESE);
-
+        {
+            advance();
+            expression();
+            match(EnumToken.RPARENTHESE);
+        }
         expressionAux();
     }
 
@@ -270,11 +288,11 @@ public class Parser
         {
             match(EnumToken.PERIOD);
             if(lToken.name == EnumToken.LENGTH)
-                match(EnumToken.LENGTH);
+                advance();
             else if(lToken.name == EnumToken.ID)
             {
-                match(EnumToken.ID);
-                match(EnumToken.RPARENTHESE);
+                advance();
+                match(EnumToken.LPARENTHESE);
                 if(lToken.name == EnumToken.INTEGER_LITERAL ||
                     lToken.name == EnumToken.TRUE || lToken.name == EnumToken.ID
                  || lToken.name == EnumToken.FALSE || lToken.name == EnumToken.NEW

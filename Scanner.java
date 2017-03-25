@@ -218,28 +218,28 @@ public class Scanner
             {
                 tok.lineNumber = lineNumber;
 
-                tok.name = EnumToken.SEP;
+                tok.attribute = EnumToken.SEP;
 
                 switch(inputIt.current())
                 {
                     case '(':
                         tok.value     = "(";
-                        tok.attribute = EnumToken.LPARENTHESE;
+                        tok.name = EnumToken.LPARENTHESE;
                         inputIt.next();
                         break;
                     case ')':
                         tok.value     = ")";
-                        tok.attribute = EnumToken.RPARENTHESE;
+                        tok.name = EnumToken.RPARENTHESE;
                         inputIt.next();
                         break;
                     case '[':
                         tok.value     = "[";
-                        tok.attribute = EnumToken.LBRACKET;
+                        tok.name = EnumToken.LBRACKET;
                         inputIt.next();
                         break;
                     case ']':
                         tok.value     = "]";
-                        tok.attribute = EnumToken.RBRACKET;
+                        tok.name = EnumToken.RBRACKET;
                         inputIt.next();
                         break;
                     case '{':
@@ -249,22 +249,22 @@ public class Scanner
                         break;
                     case '}':
                         tok.value     = "}";
-                        tok.attribute = EnumToken.RBRACE;
+                        tok.name = EnumToken.RBRACE;
                         inputIt.next();
                         break;
                     case ';':
                         tok.value     = ";";
-                        tok.attribute = EnumToken.SEMICOLON;
+                        tok.name = EnumToken.SEMICOLON;
                         inputIt.next();
                         break;
                     case ',':
                         tok.value     = ",";
-                        tok.attribute = EnumToken.COMMA;
+                        tok.name = EnumToken.COMMA;
                         inputIt.next();
                         break;
                     case '.':
                         tok.value     = ".";
-                        tok.attribute = EnumToken.PERIOD;
+                        tok.name = EnumToken.PERIOD;
                         inputIt.next();
                         break;
                 }
