@@ -76,8 +76,7 @@ public class Parser
             classDeclaration();
 
         match(EnumToken.EOF);
-
-        mensagem +=("\nCompilação encerrada com sucesso");
+        mensagem +=("Compilação encerrada com sucesso\n");
 
     }
 
@@ -128,12 +127,12 @@ public class Parser
     }
 
     private void methodDeclaration() throws CompilerException
-    {
+    {/////////////////////////////////////////////////////////////////////////
         match(EnumToken.PUBLIC);
         type();
         match(EnumToken.ID);
         match(EnumToken.LPARENTHESE);
-        
+
         if(lToken.name == EnumToken.ID || lToken.name == EnumToken.BOOLEAN
             || lToken.name == EnumToken.INT)
         {
@@ -148,7 +147,7 @@ public class Parser
         }
         match(EnumToken.RPARENTHESE);
         match(EnumToken.LBRACE);
-        
+
         while (lToken.name == EnumToken.ID || lToken.name == EnumToken.BOOLEAN
             || lToken.name == EnumToken.INT)
         {
@@ -166,40 +165,28 @@ public class Parser
                 break;
             }
         }
-        
-       /* while (lToken.name == EnumToken.ID || lToken.name == EnumToken.BOOLEAN
-            || lToken.name == EnumToken.INT)
-        {
-            if(lToken.name == EnumToken.ID)
-            {
-                advance();
-                if(lToken.name == EnumToken.ATTRIB || lToken.name == EnumToken.LBRACKET)
-                {
-                    statement();
-                    break;
-                }
-                else
-                    varDeclaration();
-            }
-            else
-                varDeclaration();
-        }*/
 
         while(lToken.name == EnumToken.LBRACE || lToken.name == EnumToken.IF
             || lToken.name == EnumToken.WHILE || lToken.name == EnumToken.ID
             || lToken.name == EnumToken.SOPRINTLN)
-            statement();
-        
+            statement(currentST);
+
         match(EnumToken.RETURN);
-        expression();
+        expression(currentST);
         match(EnumToken.SEMICOLON);
         match(EnumToken.RBRACE);
+        currentST = currentST.parent;/////////////////////////////////////////
+        //desfazer arvore do escopo
     }
 
     private void type() throws CompilerException
     {
         if(lToken.name == EnumToken.ID)
-            match(EnumToken.ID);
+    	{
+            Token t = new Token(lToken.value);
+            globalST.add(new STEntry(t, lToken.value, true));
+    		advance();
+    	}
         else if(lToken.name == EnumToken.BOOLEAN)
             match(EnumToken.BOOLEAN);
         else
@@ -215,11 +202,10 @@ public class Parser
 
     private void statement() throws CompilerException
     {
-        System.out.println(lToken.name);
         if(lToken.name == EnumToken.ID)
         {
+
             advance();
-            System.out.println(lToken.name);
             if(lToken.name == EnumToken.LBRACKET)
             {
                 match(EnumToken.LBRACKET);
@@ -232,7 +218,7 @@ public class Parser
             else if(lToken.name == EnumToken.ATTRIB)
             {
                 match(EnumToken.ATTRIB);
-                
+
                 expression();
                 match(EnumToken.SEMICOLON);
             }
@@ -242,9 +228,9 @@ public class Parser
             match(EnumToken.SOPRINTLN);
             match(EnumToken.LPARENTHESE);
             expression();
-            match(EnumToken.RPARENTHESE); 
+            match(EnumToken.RPARENTHESE);
             match(EnumToken.SEMICOLON);
-           
+
         }
         else if(lToken.name == EnumToken.WHILE)
         {
@@ -280,10 +266,10 @@ public class Parser
         if(lToken.name == EnumToken.INTEGER_LITERAL)
             advance();
         else if(lToken.name == EnumToken.TRUE)
-            advance(); 
+            advance();
         else if(lToken.name == EnumToken.FALSE)
             advance();
-        else if(lToken.name == EnumToken.ID)
+        else if (lToken.name == EnumToken.ID)
             advance();
         else if(lToken.name == EnumToken.THIS)
             advance();
@@ -330,9 +316,11 @@ public class Parser
         {
             match(EnumToken.PERIOD);
             if(lToken.name == EnumToken.LENGTH)
-                advance();
-            else if(lToken.name == EnumToken.ID)
             {
+                advance();
+                expressionAux();
+            }
+            else if (lToken.name == EnumToken.ID) {
                 advance();
                 match(EnumToken.LPARENTHESE);
                 if(lToken.name == EnumToken.INTEGER_LITERAL ||
@@ -349,6 +337,7 @@ public class Parser
                     }
                 }
                 match(EnumToken.RPARENTHESE);
+                expressionAux();
             }
         }
         else if(lToken.name == EnumToken.LT || lToken.name == EnumToken.GT ||
@@ -359,7 +348,7 @@ public class Parser
         {
             op();
             expression();
-            //expressionAux();
+            expressionAux();
         }
         else
         ;
