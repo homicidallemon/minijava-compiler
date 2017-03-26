@@ -195,7 +195,7 @@ public class JanelaPrincipal extends javax.swing.JFrame {
 
     private void BtnCompilarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCompilarActionPerformed
         TextoCompilador.setText("");
-        if(Texto.getText() != "" && arq.isFile() == true){
+        if(Texto.getText() != ""){
             if(Texto.isEditable()){
                 Salvar();
                 Texto.setEditable(false);

@@ -1,4 +1,4 @@
-/*  
+/*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -20,22 +20,27 @@ public class SymbolTable<T extends STEntry> implements Iterable<T>
     {
         symbols = new TreeMap<String, T>();
     }
-    
+
     SymbolTable(SymbolTable<T> p)
     {
         symbols = new TreeMap<String, T>();
-        
+
         parent = p;
     }
 
     public boolean add(T t)
     {
-        //System.out.print(t.lexeme);
-        
         if (symbols.containsKey(t.lexeme))
                 return false;
         symbols.put(t.lexeme, t);
         return true;
+    }
+
+    public boolean check(T t)
+    {
+        if (symbols.containsKey(t.lexeme))
+                return true;
+        return false;
     }
 
     public boolean remove(String name)
@@ -62,13 +67,12 @@ public class SymbolTable<T extends STEntry> implements Iterable<T>
         {
             s = table.symbols.get(name);
         } while (s == null && (table = table.parent) != null);
-        
+
         return s;
     }
 
     public Iterator<T> iterator()
     {
         return symbols.values().iterator();
-    } 
+    }
 }
-    

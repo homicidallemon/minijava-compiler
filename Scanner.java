@@ -13,7 +13,7 @@ import java.text.StringCharacterIterator;
 public class Scanner
 {
     private static String input;
-    private StringCharacterIterator inputIt;
+    StringCharacterIterator inputIt;
     private SymbolTable st;
     private int lineNumber,begin,end;
 
@@ -72,72 +72,59 @@ public class Scanner
                     inputIt.next();
                 }
             }
+            else if(inputIt.current() == '/')
+            {
+                inputIt.next();
+                if(inputIt.current() == '/'){
+                        while(inputIt.current() != '\n')
+                            inputIt.next();
+                        lineNumber++;
+                        inputIt.next();
+                }
+                else if(inputIt.current() == '*'){
+                        inputIt.next();
+                        while(true)
+                        {
+                            if(inputIt.current() == '\n')
+                                lineNumber++;
+                            if(inputIt.current() == '*')
+                                if(inputIt.next() == '/')
+                                    break;
+                            inputIt.next();
+                        }
+                }
+                else
+                    inputIt.previous();
+            }
 
             //Operadores aritméticos
             else if (inputIt.current() == '+' || inputIt.current() == '-'
                     || inputIt.current() == '*' || inputIt.current() == '/'
                     || inputIt.current() == '%')
             {
-                tok.name = EnumToken.ARITHOP;
+                tok.attribute = EnumToken.ARITHOP;
 
                 switch(inputIt.current())
                 {
                     case '+':
                         tok.value     = "+";
-                        tok.attribute = EnumToken.PLUS;
+                        tok.name = EnumToken.PLUS;
                         inputIt.next();
                         break;
                     case '-':
                         tok.value     = "-";
-                        tok.attribute = EnumToken.MINUS;
+                        tok.name = EnumToken.MINUS;
                         inputIt.next();
                         break;
                     case '*':
                         tok.value     = "*";
-                        tok.attribute = EnumToken.MULT;
+                        tok.name = EnumToken.MULT;
                         inputIt.next();
                         break;
                     case '/':
-                        inputIt.next();
-
-                        if(inputIt.current() == '*' || inputIt.current() == '/')    //Ignora comentários
-                        {
-                            tok.name = null;
-                            switch(inputIt.current())
-                            {
-                                case '*':
-                                    while(true)
-                                    {
-                                        inputIt.next();
-                                        if(inputIt.current() == '*')
-                                        {
-                                            inputIt.next();
-                                            if(inputIt.current() == '/')
-                                            {
-                                                inputIt.next();
-                                                break;
-                                            }
-                                        }
-                                        if(inputIt.current() == '\n')
-                                            lineNumber++;
-                                    }
-                                    break;
-
-                                case '/':
-                                    do{
-                                        inputIt.next();
-                                    }while(inputIt.current() != '\n');
-
-				                    lineNumber++;
-                                    break;
-                            }
-                        }
-                        else
-                        {
-                            tok.value     = "/";
-                            tok.attribute = EnumToken.DIV;
-                            break;
-                        }
+                        tok.value = "/";
+                        tok.attribute = EnumToken.DIV;
+                        break;
                 }
                 tok.lineNumber = lineNumber;
                 return tok;
@@ -160,13 +147,13 @@ public class Scanner
                             if(inputIt.current() == '=')
                             {
                                 tok.value     = lexema;
-                                tok.attribute = EnumToken.NE;
-                                tok.name = EnumToken.RELOP;
+                                tok.name = EnumToken.NE;
+                                tok.attribute = EnumToken.RELOP;
                             }
                             else
                             {
                                 tok.value     = lexema;
-                                tok.attribute = EnumToken.NOT;
+                                tok.name = EnumToken.NOT;
                             }
                             break;
                         case '=':
@@ -176,13 +163,13 @@ public class Scanner
                             if(inputIt.current() == '=')
                             {
                                 tok.value     = lexema;
-                                tok.attribute = EnumToken.EQ;
-                                tok.name = EnumToken.RELOP;
+                                tok.name = EnumToken.EQ;
+                                tok.attribute = EnumToken.RELOP;
                             }
                             else
                             {
                                 tok.value     = lexema;
-                                tok.attribute = EnumToken.ATTRIB;
+                                tok.name = EnumToken.ATTRIB;
                             }
                             break;
                     }
@@ -190,18 +177,18 @@ public class Scanner
                     return tok;
                 }
 
-                tok.name = EnumToken.RELOP;
+                tok.attribute = EnumToken.RELOP;
 
                 switch(inputIt.current())
                 {
                     case '<':
                         tok.value     = "<";
-                        tok.attribute = EnumToken.LT;
+                        tok.name = EnumToken.LT;
                         inputIt.next();
                         break;
                     case '>':
                         tok.value     = ">";
-                        tok.attribute = EnumToken.GT;
+                        tok.name = EnumToken.GT;
                         inputIt.next();
                         break;
                 }
@@ -244,7 +231,7 @@ public class Scanner
                         break;
                     case '{':
                         tok.value     = "{";
-                        tok.attribute = EnumToken.LBRACE;
+                        tok.name = EnumToken.LBRACE;
                         inputIt.next();
                         break;
                     case '}':
@@ -268,7 +255,6 @@ public class Scanner
                         inputIt.next();
                         break;
                 }
-
                 return tok;
             }
 
@@ -283,30 +269,36 @@ public class Scanner
                     tok.name      = EnumToken.LOGOP;
                     inputIt.next();
                 }
-                 SyntaticError(lineNumber);
+                 SyntaticError();
             }
-
-	
-	    begin = inputIt.getIndex();
-	    end = begin;
             //ID
-            if(Character.isLetter(inputIt.current()))
+            else if(Character.isLetter(inputIt.current()))
             {
-                while(Character.isLetterOrDigit(inputIt.current()) || inputIt.current() == '_'
-                      ||inputIt.current() == '.')
+                begin = inputIt.getIndex();
+                end = begin;
+                while(Character.isLetterOrDigit(inputIt.current()) || inputIt.current() == '_')
                 {
                     inputIt.next();
                 }
                 end = inputIt.getIndex();
                 lexema = new String(input.substring(begin, end));
-		    
+                if("System".equals(lexema) && inputIt.current() == '.'){
+                    while(Character.isLetterOrDigit(inputIt.current()) || inputIt.current() == '_'
+                          || inputIt.current() == '.'){
+                        inputIt.next();
+                    }
+                }
+                end = inputIt.getIndex();
+                lexema = input.substring(begin,end);
     	        //palavras reservadas
                 STEntry entry = st.get(lexema);
-
                 if (entry != null)
                     tok.name = entry.token.name;
-                else
+                else{
+                    if(lexema.startsWith("System."))
+                        SyntaticError();
                     tok.name = EnumToken.ID;
+                }
 
 
                 tok.value = lexema;
@@ -315,7 +307,7 @@ public class Scanner
             }
 
             //INTEGER_LITERAL
-            if(Character.isDigit(inputIt.current()))
+            else if(Character.isDigit(inputIt.current()))
             {
                 while(Character.isDigit(inputIt.current()))
                 {
@@ -333,20 +325,20 @@ public class Scanner
             }
 
             //EOF
-            if (inputIt.getIndex() == inputIt.getEndIndex())
+            else if (inputIt.getIndex() == inputIt.getEndIndex())
             {
                 tok.lineNumber = lineNumber;
                 tok.name = EnumToken.EOF;
 
                 return tok;
             }
-
-             SyntaticError(lineNumber);
+            else
+                SyntaticError();
 
         }
     }
 
-    private void SyntaticError(int linha) {
-        throw new CompilerException("Erro ao obter Token na linha " + linha);
+    private void SyntaticError() {
+        throw new CompilerException("Erro ao obter Token na linha " + lineNumber);
     }
 }
