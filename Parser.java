@@ -18,6 +18,7 @@ public class Parser
     private SymbolTable currentST;
     private Token lToken;
     public String mensagem = new String();
+    private int i;
 
     public Parser(String inputFile)
     {
@@ -52,7 +53,7 @@ public class Parser
     private void advance()
     {
         lToken = scan.nextToken();
-        System.out.println(lToken.name + "(" + lToken.lineNumber + ")" + "\n" );
+        System.out.println(lToken.name + "(" + lToken.lineNumber + ")\n");
     }
 
     private void match(EnumToken cTokenName) throws CompilerException
@@ -61,7 +62,7 @@ public class Parser
             advance();
         else
         {   //Erro
-            throw new CompilerException("Token inesperado: " + lToken.name + "//" + cTokenName);
+            throw new CompilerException("(" + lToken.lineNumber + ") Token inesperado: " + lToken.name + "//" + cTokenName);
         }
     }
 
@@ -71,13 +72,52 @@ public class Parser
      */
     private void program() throws CompilerException
     {
+        checkClass();
         mainClass();
         while (lToken.name == EnumToken.CLASS)
             classDeclaration();
-
         match(EnumToken.EOF);
         mensagem +=("Compilação encerrada com sucesso\n");
 
+    }
+    
+    private void checkClass() throws CompilerException
+    {
+        StringCharacterIterator temp = null;
+        temp = (StringCharacterIterator) scan.inputIt.clone();
+        Token temptk = lToken;
+        while(lToken.name == EnumToken.CLASS)
+        {
+            match(EnumToken.CLASS);
+            if(lToken.name == EnumToken.ID)
+            {
+                boolean inserted = globalST.add(new STEntry(lToken,lToken.value));
+                if(!inserted)
+                    mensagem +=("(" + lToken.lineNumber + ") Classe " + lToken.value + " já definida\n");
+                advance();
+            }
+            else
+                throw new CompilerException("(" + lToken.lineNumber +") Declaração de classe inválida\n");
+            int i = 0;
+            while(lToken.name != EnumToken.LBRACE)
+                advance();
+            advance();
+            while(true)
+            {
+                if(lToken.name == EnumToken.LBRACE)
+                    i++;
+                if(lToken.name == EnumToken.RBRACE)
+                    if(i > 0)
+                        i--;
+                    else
+                        break;
+                advance();
+            }
+            match(EnumToken.RBRACE);
+        }
+        scan.inputIt = temp;
+        lToken = temptk;
+        scan.lineNumber = 1;
     }
 
     private void mainClass() throws CompilerException
@@ -103,12 +143,19 @@ public class Parser
 
     private void classDeclaration() throws CompilerException
     {
+        currentST = new SymbolTable<STEntry>(globalST);
         match(EnumToken.CLASS);
         match(EnumToken.ID);
         if(lToken.name == EnumToken.EXTENDS)
         {
-            match(EnumToken.EXTENDS);
-            match(EnumToken.ID);
+            advance();
+            if(lToken.name == EnumToken.ID)
+        	{
+                    STEntry t = new STEntry (lToken, lToken.value);
+                    if(!globalST.check(t))
+                        mensagem += ("Classe " + lToken.value + " não definida\n");
+                    advance();
+        	}
         }
         match(EnumToken.LBRACE);
         while(lToken.name == EnumToken.ID || lToken.name == EnumToken.BOOLEAN
@@ -121,39 +168,74 @@ public class Parser
 
     private void varDeclaration() throws CompilerException
     {
-        type();
-        match(EnumToken.ID);
+        String tipo;
+        tipo = type();
+        if(lToken.name == EnumToken.ID)
+    	{
+    		boolean inserted = currentST.add(new STEntry (lToken, lToken.value,tipo));
+
+    		if(!inserted)
+    			mensagem += ("Variável " + lToken.value + " já definida\n");
+    		advance();
+    	}
         match(EnumToken.SEMICOLON);
     }
 
     private void methodDeclaration() throws CompilerException
-    {/////////////////////////////////////////////////////////////////////////
+    {
         match(EnumToken.PUBLIC);
         type();
-        match(EnumToken.ID);
-        match(EnumToken.LPARENTHESE);
+        if(lToken.name == EnumToken.ID)
+    	{
+    		boolean inserted = currentST.add(new STEntry (lToken, lToken.value));
 
+    		if(!inserted)
+    			mensagem += ("Método " + lToken.value + " já definido\n");
+    		advance();
+    	}
+        
+        currentST = new SymbolTable<STEntry>(currentST);
+        
+        match(EnumToken.LPARENTHESE);
+        
         if(lToken.name == EnumToken.ID || lToken.name == EnumToken.BOOLEAN
             || lToken.name == EnumToken.INT)
         {
             type();
-            match(EnumToken.ID);
+            if(lToken.name == EnumToken.ID)
+            {
+                boolean inserted = currentST.add(new STEntry(lToken, lToken.value));
+
+                if (!inserted) {
+                    mensagem += ("Variável " + lToken.value + " já em uso no escopo\n");
+                }
+                advance();
+            }
             while(lToken.name == EnumToken.COMMA)
             {
                 match(EnumToken.COMMA);
-                type();
-                match(EnumToken.ID);
+                String tipo;
+                tipo = type();
+                if(lToken.name == EnumToken.ID)
+            	{
+            		boolean inserted = currentST.add(new STEntry (lToken, lToken.value,tipo));
+
+            		if(!inserted)
+            			 mensagem += ("(" + lToken.lineNumber +  ") " + "Variável " + lToken.value + " já em uso no escopo\n");
+            		advance();
+            	}
             }
         }
         match(EnumToken.RPARENTHESE);
         match(EnumToken.LBRACE);
-
+        
         while (lToken.name == EnumToken.ID || lToken.name == EnumToken.BOOLEAN
             || lToken.name == EnumToken.INT)
         {
             StringCharacterIterator temp = null;
             temp = (StringCharacterIterator) scan.inputIt.clone();
             Token temptk = lToken;
+            int ln = scan.lineNumber;
             try{
                 varDeclaration();
             }
@@ -161,6 +243,7 @@ public class Parser
             {
                 lToken = temptk;
                 scan.inputIt = temp;
+                scan.lineNumber = ln;
                 //System.out.println(lToken.name);
                 break;
             }
@@ -169,46 +252,59 @@ public class Parser
         while(lToken.name == EnumToken.LBRACE || lToken.name == EnumToken.IF
             || lToken.name == EnumToken.WHILE || lToken.name == EnumToken.ID
             || lToken.name == EnumToken.SOPRINTLN)
-            statement(currentST);
-
+            statement();
+        
         match(EnumToken.RETURN);
-        expression(currentST);
+        expression();
         match(EnumToken.SEMICOLON);
         match(EnumToken.RBRACE);
-        currentST = currentST.parent;/////////////////////////////////////////
-        //desfazer arvore do escopo
+        currentST = currentST.parent;
     }
 
-    private void type() throws CompilerException
+    private String type() throws CompilerException
     {
+        String tipo;
         if(lToken.name == EnumToken.ID)
     	{
-            Token t = new Token(lToken.value);
-            globalST.add(new STEntry(t, lToken.value, true));
-    		advance();
+            STEntry t = new STEntry(lToken,lToken.value);
+            if(!globalST.check(t))
+                mensagem += ("(" + lToken.lineNumber + ")" + "Variável de tipo " + lToken.value + " inválida\n");
+            tipo = lToken.value;
+            advance();
     	}
-        else if(lToken.name == EnumToken.BOOLEAN)
+        else if(lToken.name == EnumToken.BOOLEAN){
+            tipo = "boolean";
             match(EnumToken.BOOLEAN);
+        }
         else
         {
+            tipo = lToken.value;
             match(EnumToken.INT);
             if(lToken.name == EnumToken.LBRACKET)
             {
                 match(EnumToken.LBRACKET);
                 match(EnumToken.RBRACKET);
+                tipo = "intv";
             }
         }
+        return tipo;
     }
 
     private void statement() throws CompilerException
     {
         if(lToken.name == EnumToken.ID)
         {
+            String tipo = currentST.get(lToken.value).type;
+            STEntry t = new STEntry (lToken, lToken.value);
+            boolean inserted = (currentST.check(t) || currentST.parent.check(t));
 
+            if(!inserted)
+    		mensagem += ("(" + lToken.lineNumber +  ") " + "Variável " + lToken.value +" não declarada\n");
+            
             advance();
             if(lToken.name == EnumToken.LBRACKET)
             {
-                match(EnumToken.LBRACKET);
+                advance();
                 expression();
                 match(EnumToken.RBRACKET);
                 match(EnumToken.ATTRIB);
@@ -217,9 +313,11 @@ public class Parser
             }
             else if(lToken.name == EnumToken.ATTRIB)
             {
-                match(EnumToken.ATTRIB);
-
-                expression();
+                advance();
+                int line = lToken.lineNumber;
+                String var = lToken.value;
+                if(expression() != tipo)
+                    mensagem += ("(" + line + ") Variável " + var + " não condiz com seu tipo\n");
                 match(EnumToken.SEMICOLON);
             }
         }
@@ -228,9 +326,9 @@ public class Parser
             match(EnumToken.SOPRINTLN);
             match(EnumToken.LPARENTHESE);
             expression();
-            match(EnumToken.RPARENTHESE);
+            match(EnumToken.RPARENTHESE); 
             match(EnumToken.SEMICOLON);
-
+           
         }
         else if(lToken.name == EnumToken.WHILE)
         {
@@ -244,7 +342,9 @@ public class Parser
         {
             match(EnumToken.IF);
             match(EnumToken.LPARENTHESE);
-            expression();
+            int line = lToken.lineNumber;
+            if(expression() != "boolean")
+                mensagem += ("(" + line + ") Expressão inválida\n");
             match(EnumToken.RPARENTHESE);
             statement();
             match(EnumToken.ELSE);
@@ -260,19 +360,185 @@ public class Parser
             match(EnumToken.RBRACE);
         }
     }
-
-    private void expression() throws CompilerException
+    
+    private String expression() throws CompilerException
     {
+        String tipo = new String();
         if(lToken.name == EnumToken.INTEGER_LITERAL)
+        {
             advance();
+            tipo = "int";
+        }
         else if(lToken.name == EnumToken.TRUE)
+        {
             advance();
+            tipo = "boolean";
+        }
         else if(lToken.name == EnumToken.FALSE)
+        {
             advance();
-        else if (lToken.name == EnumToken.ID)
+            tipo = "boolean";
+        }
+        else if (lToken.name == EnumToken.ID) {
+
+            STEntry t = new STEntry(lToken, lToken.value);
+            boolean inserted = (globalST.check(t) || currentST.check(t));
+            if (!inserted) {
+                mensagem += ("(" + lToken.lineNumber + ") Variável " + lToken.value + " não declarada\n");
+            }
+            t = null;
+            t = currentST.get(lToken.value);
+            if (t == null) {
+                t = globalST.get(lToken.value);
+            }
+            tipo = t.type;
             advance();
+        }
         else if(lToken.name == EnumToken.THIS)
+        {
+            tipo = "reserved";
             advance();
+        }
+        else if(lToken.name == EnumToken.NEW)
+        {
+            advance();
+            if (lToken.name == EnumToken.INT) {
+                advance();
+                match(EnumToken.LBRACKET);
+                int line = lToken.lineNumber;
+                String temp = expression();
+                if (temp != "int") {
+                    mensagem += ("(" + line + ") Declaração inválida!\n");
+                }
+                match(EnumToken.RBRACKET);
+                tipo = "intv";
+            }
+            else if (lToken.name == EnumToken.ID) {
+                STEntry t = new STEntry(lToken, lToken.value);
+                boolean inserted = currentST.add(t);
+                if (inserted) {
+                    mensagem += ("(" + lToken.lineNumber + ") Variável " + lToken.value);
+                }
+                tipo = lToken.value;
+                advance();
+                match(EnumToken.LPARENTHESE);
+                match(EnumToken.RPARENTHESE);
+            }
+            else
+                throw new CompilerException("(" + lToken.lineNumber + ") Expressão inválida\n");
+        }
+        else if(lToken.name == EnumToken.NOT)
+        {
+            advance();
+            int line = lToken.lineNumber;
+            if(expression() != "boolean")
+                mensagem += ("(" + line + ") Expressão inválida\n");
+            tipo = "boolean";
+        }
+        else if(lToken.name == EnumToken.LPARENTHESE)
+        {
+            advance();
+            tipo = expression();
+            match(EnumToken.RPARENTHESE);
+        }
+        if(lToken.name == EnumToken.PERIOD)
+        {
+            advance();
+            if(lToken.name == EnumToken.LENGTH)
+            {
+                advance();
+                tipo = "int";
+            }
+            else if(lToken.name == EnumToken.ID)
+            {
+                advance();
+                match(EnumToken.LPARENTHESE);
+                int ln = scan.lineNumber;
+                StringCharacterIterator temp = null;
+                temp = (StringCharacterIterator) scan.inputIt.clone();
+                Token temptk = lToken;
+                try{
+                    expression();
+                    while(true){
+                        StringCharacterIterator temp2 = null;
+                        int ln2 = scan.lineNumber;
+                        temp2 = (StringCharacterIterator) scan.inputIt.clone();
+                        Token temptk2 = lToken;
+                        try
+                        {
+                            match(EnumToken.COMMA);
+                            expression();
+                        }
+                        catch(CompilerException e)
+                        {
+                            scan.inputIt = temp2;
+                            scan.lineNumber = ln2;
+                            lToken = temptk2;
+                            break;
+                        }
+                    }
+                }
+                catch(CompilerException e)
+                {
+                    scan.inputIt = temp;
+                    scan.lineNumber = ln;
+                    lToken = temptk;
+                }
+                match(EnumToken.RPARENTHESE);
+            }
+            else throw new CompilerException("(" + lToken.lineNumber + ") Expressão inválida\n");
+        }
+        else if(lToken.name == EnumToken.LBRACKET)
+        {
+            advance();
+            expression();
+            match(EnumToken.RBRACKET);
+            tipo = "intv";
+        }
+        else if(lToken.attribute == EnumToken.ARITHOP || lToken.attribute == EnumToken.RELOP
+                || lToken.attribute == EnumToken.LOGOP)
+        {
+            if(lToken.attribute == EnumToken.ARITHOP)
+                tipo = "int";
+            else
+                tipo = "boolean";
+            advance();
+            op();
+            expression();
+        }
+        return tipo;
+    }
+
+    /*private String expression() throws CompilerException
+    {
+        String tipo = new String();
+        if(lToken.name == EnumToken.INTEGER_LITERAL){
+            advance();
+            tipo =  "int";
+        }
+        else if(lToken.name == EnumToken.TRUE){
+            advance(); 
+            tipo = "boolean";
+        }
+        else if(lToken.name == EnumToken.FALSE){
+            advance();
+            tipo = "boolean";
+        }
+        else if (lToken.name == EnumToken.ID) {
+            STEntry t = new STEntry(lToken, lToken.value);
+            boolean inserted = currentST.check(t);
+
+            if (!inserted) {
+                mensagem += ("(" + lToken.lineNumber + ") Variável " + lToken.value + " não definida\n");
+            }
+            t = currentST.get(lToken.value);
+            tipo = t.type;
+            advance();
+        }
+            
+        else if(lToken.name == EnumToken.THIS){
+            advance();
+        }
         else if(lToken.name == EnumToken.NEW)
         {
             advance();
@@ -280,11 +546,17 @@ public class Parser
             {
                 advance();
                 match(EnumToken.LBRACKET);
-                expression();
+                if(expression() != "int")
+                    mensagem += ("(" + lToken.lineNumber + ") Expressão inválida\n");
                 match(EnumToken.RBRACKET);
+                return "int";
             }
             else if(lToken.name == EnumToken.ID)
             {
+                boolean inserted = globalST.check(new STEntry (lToken, lToken.value));
+            	if(!inserted)
+            		mensagem += ("(" + lToken.lineNumber + ") Tipo " + lToken.value + " não definido\n");
+                tipo = lToken.value;
                 advance();
                 match(EnumToken.LPARENTHESE);
                 match(EnumToken.RPARENTHESE);
@@ -293,24 +565,33 @@ public class Parser
         else if(lToken.name == EnumToken.NOT){
             advance();
             expression();
+            tipo = "bollean";
         }
         else if(lToken.name == EnumToken.LPARENTHESE)
         {
             advance();
-            expression();
+            tipo = expression();
             match(EnumToken.RPARENTHESE);
         }
-        expressionAux();
+        if(tipo == "")
+            tipo = expressionAux();
+        else
+            expressionAux();
+        return tipo;
     }
 
-    private void expressionAux() throws CompilerException
+    private String expressionAux() throws CompilerException
     {
+        String tipo = new String();
         if(lToken.name == EnumToken.LBRACKET)
         {
             match(EnumToken.LBRACKET);
-            expression();
+            int line = lToken.lineNumber;
+            if(expression() != "int")
+                mensagem += ("(" + line + ") Expressão inválida\n");
             match(EnumToken.RBRACKET);
             expressionAux();
+            tipo = "intv";
         }
         else if(lToken.name == EnumToken.PERIOD)
         {
@@ -321,6 +602,14 @@ public class Parser
                 expressionAux();
             }
             else if (lToken.name == EnumToken.ID) {
+                STEntry t = new STEntry(lToken, lToken.value);
+                boolean inserted = currentST.check(t);
+
+                if (!inserted) {
+                    mensagem += ("(" + lToken.lineNumber + ") Variável " + lToken.value + " já existente\n");
+                }
+
+                
                 advance();
                 match(EnumToken.LPARENTHESE);
                 if(lToken.name == EnumToken.INTEGER_LITERAL ||
@@ -347,12 +636,19 @@ public class Parser
             lToken.name == EnumToken.AND)
         {
             op();
-            expression();
+            int line = lToken.lineNumber;
+            if(tipo != "int" || expression() != "int"){
+                mensagem += ("(" + line + ") Expressão inválida\n");
+                tipo = "0";
+            }
+            else
+                tipo = "int";
             expressionAux();
         }
         else
-        ;
-    }
+            ;
+        return tipo;
+    }*/
 
     private void op() throws CompilerException
     {

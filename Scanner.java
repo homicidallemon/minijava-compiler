@@ -15,7 +15,8 @@ public class Scanner
     private static String input;
     StringCharacterIterator inputIt;
     private SymbolTable st;
-    private int lineNumber,begin,end;
+    int lineNumber;
+    private int begin,end;
 
     public Scanner(SymbolTable globalST, String inputFileName)
     {
@@ -265,11 +266,13 @@ public class Scanner
                 if(inputIt.current() == '&')
                 {
                     tok.value     = "&&";
-                    tok.attribute = EnumToken.AND;
-                    tok.name      = EnumToken.LOGOP;
+                    tok.attribute = EnumToken.LOGOP;
+                    tok.name      = EnumToken.AND;
+                    tok.lineNumber = lineNumber;
                     inputIt.next();
+                    return tok;
                 }
-                 SyntaticError();
+                SyntaticError();
             }
             //ID
             else if(Character.isLetter(inputIt.current()))
@@ -339,6 +342,6 @@ public class Scanner
     }
 
     private void SyntaticError() {
-        throw new CompilerException("Erro ao obter Token na linha " + lineNumber);
+        throw new CompilerException("Caractere " + inputIt.current() + " inválido na linha " + lineNumber);
     }
 }
