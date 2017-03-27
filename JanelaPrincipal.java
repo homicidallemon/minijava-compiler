@@ -59,6 +59,11 @@ public class JanelaPrincipal extends javax.swing.JFrame {
         Texto.setColumns(20);
         Texto.setLineWrap(true);
         Texto.setRows(5);
+        Texto.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                TextoMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(Texto);
 
         TextoCompilador.setEditable(false);
@@ -181,6 +186,35 @@ public class JanelaPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_AbrirActionPerformed
 
     private void SalvarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SalvarActionPerformed
+        Salvar();
+    }//GEN-LAST:event_SalvarActionPerformed
+
+    private void SairActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SairActionPerformed
+        System.exit(0);
+    }//GEN-LAST:event_SairActionPerformed
+
+    private void BtnCompilarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCompilarActionPerformed
+        TextoCompilador.setText("");
+        if(Texto.getText() != ""){
+            if(Texto.isEditable()){
+                Salvar();
+                Texto.setEditable(false);
+            }
+            Parser pars = new Parser(arq.getPath());
+            pars.execute();
+            TextoCompilador.setText(pars.mensagem);
+        }else{
+            JOptionPane.showMessageDialog(null,"Crie ou abra um arquivo primeiro!");
+        }
+    }//GEN-LAST:event_BtnCompilarActionPerformed
+
+    private void TextoMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TextoMouseClicked
+        Texto.setEditable(true);
+    }//GEN-LAST:event_TextoMouseClicked
+
+    
+    private void Salvar()
+    {
         JFileChooser saveFile = new JFileChooser();
         FileFilter filtro = new FileNameExtensionFilter("Arquivos MiniJava (*.mj)","mj");
         saveFile.setFileFilter(filtro);
@@ -193,20 +227,10 @@ public class JanelaPrincipal extends javax.swing.JFrame {
             try (FileWriter file = new FileWriter(str)) {
                 file.write(Texto.getText());
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, "Arquivo inválido!");
+                JOptionPane.showMessageDialog(null,"Arquivo inválido!");
             }
         }
-    }//GEN-LAST:event_SalvarActionPerformed
-
-    private void SairActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SairActionPerformed
-        System.exit(0);
-    }//GEN-LAST:event_SairActionPerformed
-
-    private void BtnCompilarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BtnCompilarActionPerformed
-        SymbolTable GlobalST;
-        
-    }//GEN-LAST:event_BtnCompilarActionPerformed
-
+    }
     /**
      * @param args the command line arguments
      */

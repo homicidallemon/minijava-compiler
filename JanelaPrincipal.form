@@ -134,6 +134,9 @@
             <Property name="lineWrap" type="boolean" value="true"/>
             <Property name="rows" type="int" value="5"/>
           </Properties>
+          <Events>
+            <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="TextoMouseClicked"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>
@@ -158,6 +161,9 @@
       <Properties>
         <Property name="text" type="java.lang.String" value="Compilar"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="BtnCompilarActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.Box$Filler" name="filler1">
       <Properties>
